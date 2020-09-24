@@ -1,0 +1,28 @@
+=== Affili IR ===
+Contributors: davodsaraei
+Tags: affili-ir, affili, affiliate-network, affiliate-marketing
+Requires at least: 4.1
+Requires PHP: 7.2.*
+Tested up to: 4.9.4
+Stable tag: 1.0.1
+License: GPLv2
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+
+The Affili WordPress Plugin allows you to automatically track affiliate conversions.
+
+== Description ==
+The Affili WordPress Plugin allows you to automatically track affiliate conversions.
+
+This plugin makes use of the Affili API to interact with affili.ir.
+
+
+== Installation ==
+1. You can either install this plugin from the WordPress Plugin Directory,
+  or manually  [download the plugin](https://github.com/affili-ir/wordpress/releases) and upload it through the 'Plugins > Add New' menu in WordPress
+1. Activate the plugin through the 'Plugins' menu in WordPress
+1. Register at https://affili.ir as a merchant to get an API key
+1. Copy your API Key into the "Token" input in the plugin's settings
+
+== How to Use ==
+Once the plugin is properly configured it functions automatically. Every time affiliates send to you customer we we track links and when customer make an order
+we set a conversion.
