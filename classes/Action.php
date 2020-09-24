@@ -117,6 +117,7 @@ class Action
 
         echo '<script type="text/javascript" src="https://analytics.affili.ir/scripts/affili-js.js" async></script>';
         echo '<script type="text/javascript">';
+        echo 'window.affiliData = window.affiliData || [];function affili(){affiliData.push(arguments);}';
         echo 'affili("create", "'.$model->value.'");';
         echo 'affili("detect");';
         echo '</script>';
