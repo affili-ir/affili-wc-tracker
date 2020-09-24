@@ -1,0 +1,25 @@
+# Author: developer@affili.ir
+## msgcat affili-fa_IR.po | msgfmt -o affili-fa_IR.mo -
+
+msgid ""
+msgstr ""
+"Language: fa_IR\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "affili"
+msgstr "افیلی"
+
+msgid "affili plugin"
+msgstr "افزونه افیلی"
+
+msgid "The WordPress plugin for Affili's merchants."
+msgstr "افزونه افیلی برای فروشگاه‌ها."
+
+msgid "access token"
+msgstr "توکن"
+
+msgid "submit"
+msgstr "ارسال"
+
+msgid "access token saved successful."
+msgstr "access token ذخیره شد."
