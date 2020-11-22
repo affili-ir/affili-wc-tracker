@@ -115,21 +115,24 @@ class Action
 
     public function setAffiliJs()
     {
-        $model = $this->getAccountId();
+        $script = $this->createInlineScript();
 
-        echo '<script type="text/javascript" src="https://analytics.affili.ir/scripts/affili-js.js" async></script>';
-        echo '<script type="text/javascript">';
-        echo 'window.affiliData = window.affiliData || [];function affili(){affiliData.push(arguments);}';
-        echo 'affili("create", "'.$model->value.'");';
-        echo 'affili("detect");';
-        echo '</script>';
+        wp_enqueue_script("affili-ir-js", "https://analytics.affili.ir/scripts/affili-js.js");
+        wp_add_inline_script("affili-ir-js", $script);
     }
 
-    public function setMetaData()
+    public function createInlineScript()
     {
         $model = $this->getAccountId();
 
-        echo '<meta name="affiliTokenId" content="'.$model->value.'" />';
+        $script = '';
+        $script .= '<script type="text/javascript">'.PHP_EOL;
+        $script .= 'window.affiliData = window.affiliData || [];function affili(){affiliData.push(arguments);}'.PHP_EOL;
+        $script .= 'affili("create", "'.$model->value.'");'.PHP_EOL;
+        $script .= 'affili("detect");'.PHP_EOL;
+        $script .= '</script>'.PHP_EOL;
+
+        return $script;
     }
 
     public function trackOrders($order_id)
@@ -153,8 +156,8 @@ class Action
             $amount = $amount * 10;
         }
 
-        $affili = "affili('conversion', '{$order_key}', '{$amount}', 'buy');";
-        echo '<script type="text/javascript">'.$affili.'</script>';
+        $script = "affili('conversion', '{$order_key}', '{$amount}', 'buy');";
+        wp_add_inline_script("affili-ir-js", $script);
     }
 
     public function loadTextDomain()
@@ -174,7 +177,6 @@ class Action
 
         add_action('admin_notices', [$this, 'displayFlashNotices'], 12);
         add_action( 'wp_head', [$this, 'setAffiliJs'] );
-        // add_action( 'wp_head', [$this, 'setMetaData'] );
 
         add_action( 'woocommerce_thankyou', [$this, 'trackOrders']);
     }
