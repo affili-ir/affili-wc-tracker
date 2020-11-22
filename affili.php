@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @link              https://affili.ir
  * @since             1.0.0
@@ -8,23 +7,35 @@
  * Plugin Name:       affili
  * Plugin URI:        https://github.com/affili-ir/wordpress
  * Description:       The WordPress plugin for Affili's merchants.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Author:            affili
  * Author URI:        https://affili.ir
- * License:           MIT
+ * License:           GPLv2 or later
  * License URI:       https://github.com/affili-ir/wordpress/blob/master/LICENSE
  * Text Domain:       affili
- * Domain Path:       /affili
+ * Domain Path:       /languages
  */
 
 if( !defined('ABSPATH') ) {
     exit;
 }
 
-define('AFFILI_FILE_URL', __FILE__);
+if (!defined('AFFILI_FILE_DIR')) {
+    define('AFFILI_FILE_DIR', __FILE__);
+}
+
+if (!defined('AFFILI_PLUGIN_DIR')) {
+    define('AFFILI_PLUGIN_DIR', plugin_dir_path(__FILE__));
+}
+
+if (!defined('AFFILI_BASENAME')) {
+    define('AFFILI_BASENAME', plugin_basename(AFFILI_PLUGIN_DIR));
+}
 
 include_once __DIR__.'/classes/Action.php';
 include_once __DIR__.'/classes/Installer.php';
 
-Action::factory();
-Installer::factory();
+register_activation_hook(AFFILI_FILE_DIR, ['AffiliIR\Installer', 'activation']);
+register_deactivation_hook(AFFILI_FILE_DIR, ['AffiliIR\Installer', 'deactivation']);
+
+AffiliIR\Action::factory();

@@ -1,5 +1,7 @@
 <?php
 
+namespace AffiliIR;
+
 class Action
 {
     protected $plugin_name = 'affili';
@@ -43,7 +45,7 @@ class Action
 
     public function renderPage()
     {
-        $access_token = $this->getAccessToken();
+        $account_id = $this->getAccountId();
 
         include_once __DIR__.'/../views/form.php';
     }
@@ -53,30 +55,30 @@ class Action
         wp_enqueue_style( 'admin_css_foo', plugins_url('assets/css/admin-style-main.css',__DIR__), false, '1.0.0' );
     }
 
-    public function setAccessToken()
+    public function setAccountId()
     {
-        $nonce     = wp_verify_nonce($_POST['affili_set_access_token'], 'eadkf#adk$fawlkaawwlRRe');
-        $condition = isset($_POST['affili_set_access_token']) && $nonce;
+        $nonce     = wp_verify_nonce($_POST['affili_set_account_id'], 'eadkf#adk$fawlkaawwlRRe');
+        $condition = isset($_POST['affili_set_account_id']) && $nonce;
 
         if($condition) {
-            $access_token = sanitize_text_field($_POST['access_token']);
+            $account_id = sanitize_text_field($_POST['account_id']);
             $data = [
-                'name'  => 'access_token',
-                'value' => $access_token,
+                'name'  => 'account_id',
+                'value' => $account_id,
             ];
 
-            $access_token_model = $this->getAccessToken();
+            $account_id_model = $this->getAccountId();
 
-            if(empty($access_token_model)) {
+            if(empty($account_id_model)) {
                 $this->wpdb->insert($this->table_name, $data, '%s');
             }else {
                 $this->wpdb->update($this->table_name, $data, [
-                    'id' => $access_token_model->id
+                    'id' => $account_id_model->id
                 ]);
             }
 
             $admin_notice = "success";
-            $message      = __('access token saved successful.', 'affili');
+            $message      = __('account id saved successful.', 'affili');
 
             $this->customRedirect($message, $admin_notice);
             exit;
@@ -113,7 +115,7 @@ class Action
 
     public function setAffiliJs()
     {
-        $model = $this->getAccessToken();
+        $model = $this->getAccountId();
 
         echo '<script type="text/javascript" src="https://analytics.affili.ir/scripts/affili-js.js" async></script>';
         echo '<script type="text/javascript">';
@@ -125,7 +127,7 @@ class Action
 
     public function setMetaData()
     {
-        $model = $this->getAccessToken();
+        $model = $this->getAccountId();
 
         echo '<meta name="affiliTokenId" content="'.$model->value.'" />';
     }
@@ -155,12 +157,20 @@ class Action
         echo '<script type="text/javascript">'.$affili.'</script>';
     }
 
+    public function loadTextDomain()
+    {
+        $lang_dir = AFFILI_BASENAME.'/languages/';
+        load_plugin_textdomain('affili', false, $lang_dir);
+    }
+
     public function setup()
     {
+        add_action('plugins_loaded', [$this, 'loadTextDomain']); // load plugin translation file
+
         add_action('admin_menu', [$this, 'menu']);
         add_action('init', [$this, 'init']);
         add_action('admin_enqueue_scripts', [$this, 'loadAdminStyles']);
-        add_action('admin_post_set_access_token', [$this, 'setAccessToken']);
+        add_action('admin_post_set_account_id', [$this, 'setAccountId']);
 
         add_action('admin_notices', [$this, 'displayFlashNotices'], 12);
         add_action( 'wp_head', [$this, 'setAffiliJs'] );
@@ -182,10 +192,10 @@ class Action
         return $instance;
     }
 
-    protected function getAccessToken()
+    protected function getAccountId()
     {
         $result = $this->wpdb->get_results(
-            "SELECT * FROM {$this->table_name} WHERE name = 'access_token' limit 1"
+            "SELECT * FROM {$this->table_name} WHERE name = 'account_id' limit 1"
         );
         $result = is_array($result) ? array_pop($result) : [];
 
