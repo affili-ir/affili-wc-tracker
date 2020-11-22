@@ -38,9 +38,6 @@ we set a conversion.
 *Release Date - 22 November 2020*
 
 * First stable version
-
-1.1.1
-*Release Date - 22 November 2020*
-
 * Use wp_add_inline_script and wp_enqueue_script instead of inline code.
 * Add changelog
+* Add uninstall
