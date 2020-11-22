@@ -26,3 +26,21 @@ This plugin makes use of the Affili API to interact with affili.ir.
 == How to Use ==
 Once the plugin is properly configured it functions automatically. Every time affiliates send to you customer we we track links and when customer make an order
 we set a conversion.
+
+== Changelog ==
+1.0.0
+*Release Date - 24 September 2020*
+
+* Initial setup
+* MVP version.
+
+1.1.0
+*Release Date - 22 November 2020*
+
+* First stable version
+
+1.1.1
+*Release Date - 22 November 2020*
+
+* Use wp_add_inline_script and wp_enqueue_script instead of inline code.
+* Add changelog
