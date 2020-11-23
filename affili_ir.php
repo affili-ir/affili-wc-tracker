@@ -2,17 +2,17 @@
 /**
  * @link              https://affili.ir
  * @since             1.0.0
- * @package           Affili
+ * @package           AffiliIR
  *
- * Plugin Name:       affili
+ * Plugin Name:       affili_ir
  * Plugin URI:        https://github.com/affili-ir/wordpress
  * Description:       The WordPress plugin for Affili's merchants.
  * Version:           1.1.0
- * Author:            affili
+ * Author:            Affili IR
  * Author URI:        https://affili.ir
  * License:           GPLv2 or later
  * License URI:       https://github.com/affili-ir/wordpress/blob/master/LICENSE
- * Text Domain:       affili
+ * Text Domain:       affili_ir
  * Domain Path:       /languages
  */
 

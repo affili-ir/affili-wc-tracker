@@ -1,12 +1,12 @@
 # Author: developer@affili.ir
-## msgcat affili-fa_IR.po | msgfmt -o affili-fa_IR.mo -
+## msgcat affili_ir-fa_IR.po | msgfmt -o affili_ir-fa_IR.mo -
 
 msgid ""
 msgstr ""
 "Language: fa_IR\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "affili"
+msgid "affili_ir"
 msgstr "افیلی"
 
 msgid "affili plugin"
@@ -21,5 +21,9 @@ msgstr "اکانت آیدی"
 msgid "submit"
 msgstr "ارسال"
 
-msgid "account id saved successful."
-msgstr "اکانت آیدی ذخیره شد."
+msgid "data saved successful."
+msgstr "اطلاعات ذخیره شد."
+
+
+msgid "categories"
+msgstr "دسته‌بندی‌ها"

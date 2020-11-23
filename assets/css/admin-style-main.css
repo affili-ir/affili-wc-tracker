@@ -22,3 +22,19 @@
     display: inline-block;
     margin-bottom: .5rem;
 }
+
+.affili-d-inline-block {
+    display: inline-block;
+}
+
+.affili-input-inline-grid {
+    margin-left:1%;
+    margin-right:1%;
+    min-width:98%;
+}
+
+@media screen and (min-width: 768px) {
+    .affili-input-inline-grid {
+        min-width:47.5%;
+    }
+}

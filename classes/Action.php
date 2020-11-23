@@ -2,9 +2,14 @@
 
 namespace AffiliIR;
 
+
+require_once 'Woocommerce.php';
+
+use AffiliIR\Woocommerce as AffiliIR_Woocommerce;
+
 class Action
 {
-    protected $plugin_name = 'affili';
+    protected $plugin_name = 'affili_ir';
 
     private $table_name;
     private $wpdb;
@@ -24,10 +29,10 @@ class Action
 
     public function menu()
     {
-        $page_title = __('affili plugin', 'affili');
-        $menu_title = __('affili', 'affili');
+        $page_title = __('affili plugin', $this->plugin_name);
+        $menu_title = __('affili_ir', $this->plugin_name);
         $capability = 'manage_options';
-        $menu_slug  = 'affili';
+        $menu_slug  = $this->plugin_name;
         $function   = [$this, 'renderPage'];
         $icon_url   = 'data:image/svg+xml;base64,'. base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 173.16 173.16"><defs><style>.cls-1{fill:#fff;fill-rule:evenodd;}</style></defs><title>Asset 4</title><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><path class="cls-1" d="M173.16,150.47V86.58A86.59,86.59,0,1,0,134,159V115.45c0-3.75-5.22-13.31-12-13.31v8.76c0,10.8-15.87,30.24-47.25,30.24-27.11,0-52-24.37-52-54.56a63.89,63.89,0,0,1,127.78,0v63.89a22.69,22.69,0,0,0,22.69,22.69Z"/><path class="cls-1" d="M130.22,92.17a7,7,0,1,0-7-7A7,7,0,0,0,130.22,92.17Z"/></g></g></svg>');
         $position   = 100;
@@ -45,14 +50,18 @@ class Action
 
     public function renderPage()
     {
-        $account_id = $this->getAccountId();
+        $woocommerce = new AffiliIR_Woocommerce;
+
+        $account_id  = $this->getAccountId();
+        $plugin_name = $this->plugin_name;
+        $main_cats   = $woocommerce->getCategories(0); // just parent categories
 
         include_once __DIR__.'/../views/form.php';
     }
 
     public function loadAdminStyles()
     {
-        wp_enqueue_style( 'admin_css_foo', plugins_url('assets/css/admin-style-main.css',__DIR__), false, '1.0.0' );
+        wp_enqueue_style( 'affili-ir-admin-style', plugins_url('assets/css/admin-style-main.css',__DIR__), false, '1.0.0' );
     }
 
     public function setAccountId()
@@ -77,8 +86,11 @@ class Action
                 ]);
             }
 
+            $woocommerce = new AffiliIR_Woocommerce;
+            $woocommerce->insertCommissionKeys($_POST['category']);
+
             $admin_notice = "success";
-            $message      = __('account id saved successful.', 'affili');
+            $message      = __('data saved successful.', $this->plugin_name);
 
             $this->customRedirect($message, $admin_notice);
             exit;
@@ -117,8 +129,8 @@ class Action
     {
         $script = $this->createInlineScript();
 
-        wp_enqueue_script("affili-ir-js", "https://analytics.affili.ir/scripts/affili-js.js");
-        wp_add_inline_script("affili-ir-js", $script);
+        wp_enqueue_script("affili-ir-script", "https://analytics.affili.ir/scripts/affili-js.js");
+        wp_add_inline_script("affili-ir-script", $script);
     }
 
     public function createInlineScript()
@@ -126,44 +138,50 @@ class Action
         $model = $this->getAccountId();
 
         $script = '';
-        $script .= '<script type="text/javascript">'.PHP_EOL;
         $script .= 'window.affiliData = window.affiliData || [];function affili(){affiliData.push(arguments);}'.PHP_EOL;
         $script .= 'affili("create", "'.$model->value.'");'.PHP_EOL;
         $script .= 'affili("detect");'.PHP_EOL;
-        $script .= '</script>'.PHP_EOL;
 
         return $script;
     }
 
     public function trackOrders($order_id)
     {
-        $order = wc_get_order($order_id);
+        $order_id    = apply_filters('woocommerce_thankyou_order_id', absint($GLOBALS['order-received']));
+        $order_key   = apply_filters('woocommerce_thankyou_order_key', empty($_GET['key']) ? '' : wc_clean($_GET['key']));
+        $woocommerce = new AffiliIR_Woocommerce;
+        $order       = wc_get_order($order_id);
 
-        $items          = $order->get_items();
-        $order_key      = $order->get_order_key();
-        $order_currency = $order->get_currency();
+        if ($order_id <= 0) return;
 
-        $amount = 0;
-        foreach ($items as $item) {
-            // $product = $item->get_product();
-            $qty = $item['qty'];
+        $order_key_check = $woocommerce->isWoo3() ? $order->get_order_key() : $order->order_key;
 
-            $subtotal = $order->get_line_subtotal($item, true, true);
-            $amount   = $subtotal * $qty + $amount;
+        if ($order_key_check !== $order_key) return;
+
+        $data = $woocommerce->getOrderData($order);
+
+        $commissions  = $data['commissions'];
+        $options      = $data['options'];
+        $external_id  = $data['external_id'];
+        $amount       = $data['amount'];
+        $is_multi     = $data['is_multi'];
+        $default_name = $data['default_name'];
+        // $order_key   = $data['order_key'];
+
+        // Check if we have multiple commission names
+        if($is_multi) {
+            $script = "affili('conversionMulti', '{$external_id}', '{$amount}', {$commissions}, {$options});";
+        }else {
+            $script = "affili('conversion', '{$external_id}', '{$amount}', '{$default_name}', {$options})";
         }
 
-        if($order_currency === 'IRT') {
-            $amount = $amount * 10;
-        }
-
-        $script = "affili('conversion', '{$order_key}', '{$amount}', 'buy');";
-        wp_add_inline_script("affili-ir-js", $script);
+        wp_add_inline_script("affili-ir-script", $script);
     }
 
     public function loadTextDomain()
     {
         $lang_dir = AFFILI_BASENAME.'/languages/';
-        load_plugin_textdomain('affili', false, $lang_dir);
+        load_plugin_textdomain($this->plugin_name, false, $lang_dir);
     }
 
     public function setup()
