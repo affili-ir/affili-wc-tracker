@@ -150,14 +150,18 @@ class Woocommerce
 
     private function getOrderItemCommissions($item, $subtotal)
     {
+        $category_commission_type = false;
         $categories = wp_get_post_terms($item->get_product_id(), 'product_cat');
         foreach ( $categories as $category ) {
-            $category_commission_type = $this->findCommissionKey($category->term_id);
+            $commission_key = $this->findCommissionKey($category->term_id);
+            if($commission_key && $commission_key->value) {
+                $category_commission_type = $commission_key->value;
+            }
         }
 
         return $category_commission_type ? [
             'sub_amount'    => $subtotal,
-            'name'          => $category_commission_type->value ?: 'default',
+            'name'          => $category_commission_type ?: 'default',
         ] : [];
     }
 
