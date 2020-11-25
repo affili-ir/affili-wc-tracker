@@ -51,6 +51,10 @@ class Woocommerce
 
     public function insertCommissionKeys($item)
     {
+        if(empty($item['id'])) {
+            return;
+        }
+
         $commission_key = $this->findCommissionKey($item['id']);
 
         $data = [

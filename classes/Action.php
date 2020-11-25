@@ -188,13 +188,16 @@ class Action
         $model = $this->getAccountId();
 
         $script = '';
-        $script .= 'window.affiliData = window.affiliData || [];function affili(){affiliData.push(arguments);}'.PHP_EOL;
-        $script .= 'affili("create", "'.$model->value.'");'.PHP_EOL;
-        $script .= 'affili("detect");'.PHP_EOL;
 
-        $custom_code = $this->getCustomCode();
-        if($custom_code) {
-            $script .= $custom_code->value;
+        if($model) {
+            $script .= 'window.affiliData = window.affiliData || [];function affili(){affiliData.push(arguments);}'.PHP_EOL;
+            $script .= 'affili("create", "'.$model->value.'");'.PHP_EOL;
+            $script .= 'affili("detect");'.PHP_EOL;
+
+            $custom_code = $this->getCustomCode();
+            if($custom_code) {
+                $script .= $custom_code->value;
+            }
         }
 
         return $script;
@@ -287,7 +290,9 @@ class Action
         );
         $result = is_array($result) ? array_pop($result) : [];
 
-        $result->value = stripslashes($result->value);
+        if($result) {
+            $result->value = stripslashes($result->value);
+        }
 
         return $result;
     }
