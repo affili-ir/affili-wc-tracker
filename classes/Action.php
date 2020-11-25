@@ -192,6 +192,11 @@ class Action
         $script .= 'affili("create", "'.$model->value.'");'.PHP_EOL;
         $script .= 'affili("detect");'.PHP_EOL;
 
+        $custom_code = $this->getCustomCode();
+        if($custom_code) {
+            $script .= $custom_code->value;
+        }
+
         return $script;
     }
 
