@@ -6,24 +6,38 @@ msgstr ""
 "Language: fa_IR\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "affili_ir"
+msgid "Affili"
 msgstr "افیلی"
 
-msgid "affili plugin"
+msgid "Affili Plugin"
 msgstr "افزونه افیلی"
 
 msgid "The WordPress plugin for Affili's merchants."
 msgstr "افزونه افیلی برای فروشگاه‌ها."
 
-msgid "account id"
+msgid "Account ID"
 msgstr "اکانت آیدی"
 
-msgid "submit"
+msgid "Category ID"
+msgstr "آیدی دسته‌بندی"
+
+msgid "ID"
+msgstr "آیدی"
+
+msgid "Submit"
 msgstr "ارسال"
 
-msgid "data saved successful."
+msgid "Data saved successful."
 msgstr "اطلاعات ذخیره شد."
 
-
-msgid "categories"
+msgid "Categories"
 msgstr "دسته‌بندی‌ها"
+
+msgid "Category"
+msgstr "دسته‌بندی"
+
+msgid "Commission key"
+msgstr "کلید کمیسیون"
+
+msgid "Add Commission key"
+msgstr "افزودن کلید کمیسیون"

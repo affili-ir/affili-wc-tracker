@@ -4,8 +4,11 @@ namespace AffiliIR;
 
 
 require_once 'Woocommerce.php';
+require_once 'ListTable.php';
+
 
 use AffiliIR\Woocommerce as AffiliIR_Woocommerce;
+use AffiliIR\ListTable as AffiliIR_ListTable;
 
 class Action
 {
@@ -29,8 +32,8 @@ class Action
 
     public function menu()
     {
-        $page_title = __('affili plugin', $this->plugin_name);
-        $menu_title = __('affili_ir', $this->plugin_name);
+        $page_title = __('Affili Plugin', $this->plugin_name);
+        $menu_title = __('Affili', $this->plugin_name);
         $capability = 'manage_options';
         $menu_slug  = $this->plugin_name;
         $function   = [$this, 'renderPage'];
@@ -54,7 +57,9 @@ class Action
 
         $account_id  = $this->getAccountId();
         $plugin_name = $this->plugin_name;
-        $main_cats   = $woocommerce->getCategories(0); // just parent categories
+
+        $list_table = new AffiliIR_ListTable();
+        $list_table->prepare_items();
 
         include_once __DIR__.'/../views/form.php';
     }
@@ -62,6 +67,11 @@ class Action
     public function loadAdminStyles()
     {
         wp_enqueue_style( 'affili-ir-admin-style', plugins_url('assets/css/admin-style-main.css',__DIR__), false, '1.0.0' );
+
+        wp_enqueue_style('select2', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css' );
+	    wp_enqueue_script('select2', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js', array('jquery') );
+
+        wp_enqueue_script('affili-ir-admin-script',  plugins_url('assets/js/admin-script-main.js', __DIR__), array( 'jquery', 'select2' ) );
     }
 
     public function setAccountId()
@@ -90,7 +100,7 @@ class Action
             $woocommerce->insertCommissionKeys($_POST['category']);
 
             $admin_notice = "success";
-            $message      = __('data saved successful.', $this->plugin_name);
+            $message      = __('Data saved successful.', $this->plugin_name);
 
             $this->customRedirect($message, $admin_notice);
             exit;
@@ -194,9 +204,11 @@ class Action
         add_action('admin_post_set_account_id', [$this, 'setAccountId']);
 
         add_action('admin_notices', [$this, 'displayFlashNotices'], 12);
-        add_action( 'wp_head', [$this, 'setAffiliJs'] );
+        add_action('wp_head', [$this, 'setAffiliJs'] );
 
-        add_action( 'woocommerce_thankyou', [$this, 'trackOrders']);
+        add_action('woocommerce_thankyou', [$this, 'trackOrders']);
+
+        add_action('wp_ajax_affili_find_category', [$this, 'findCategoryAjax']);
     }
 
     public static function factory()
@@ -244,5 +256,23 @@ class Action
 
         // We update the option with our notices array
         update_option('affili_flash_notices', $notices );
+    }
+
+    public function findCategoryAjax()
+    {
+        // we will pass category IDs and titles to this array
+        $return = [];
+
+        $search_results = (new AffiliIR_Woocommerce)->getCategories(null, [
+            'name__like' => $_GET['q'],
+        ]);
+        foreach($search_results as $result) {
+            $return[] = [
+                $result->cat_ID,
+                $result->cat_name,
+            ];
+        }
+        echo json_encode( $return );
+        wp_die();
     }
 }

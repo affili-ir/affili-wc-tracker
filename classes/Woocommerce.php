@@ -4,7 +4,6 @@ namespace AffiliIR;
 
 class Woocommerce
 {
-
     private $table_name;
     private $wpdb;
 
@@ -16,7 +15,7 @@ class Woocommerce
         $this->table_name = $wpdb->prefix . 'affili';
     }
 
-    public function getCategories($category_id = null)
+    public function getCategories($category_id = null, $options = [])
     {
         $taxonomy     = 'product_cat';
         $orderby      = 'id';
@@ -33,7 +32,7 @@ class Woocommerce
             'pad_counts'   => $pad_counts,
             'hierarchical' => $hierarchical,
             'title_li'     => $title,
-            'hide_empty'   => $empty
+            'hide_empty'   => $empty,
         ];
 
         if($category_id !== null) {
@@ -43,26 +42,28 @@ class Woocommerce
             ];
         }
 
+        if(is_array($options) && $options) {
+            $args = array_merge($args, $options);
+        }
+
         return get_categories( $args );
     }
 
-    public function insertCommissionKeys($cats)
+    public function insertCommissionKeys($item)
     {
-        foreach($cats as $cat_id => $key) {
-            $commission_key = $this->findCommissionKey($cat_id);
+        $commission_key = $this->findCommissionKey($item['id']);
 
-            $data = [
-                'name'  => "category-commission-{$cat_id}",
-                'value' => $key,
-            ];
+        $data = [
+            'name'  => "category-commission-{$item['id']}",
+            'value' => $item['commission-key'],
+        ];
 
-            if(empty($commission_key)) {
-                $this->wpdb->insert($this->table_name, $data, '%s');
-            }else {
-                $this->wpdb->update($this->table_name, $data, [
-                    'id' => $commission_key->id
-                ]);
-            }
+        if(empty($commission_key)) {
+            $this->wpdb->insert($this->table_name, $data, '%s');
+        }else {
+            $this->wpdb->update($this->table_name, $data, [
+                'id' => $commission_key->id
+            ]);
         }
     }
 
@@ -72,6 +73,15 @@ class Woocommerce
             "SELECT * FROM {$this->table_name} WHERE name = 'category-commission-{$category_id}' limit 1"
         );
         $result = is_array($result) ? array_pop($result) : [];
+
+        return $result;
+    }
+
+    public function getCommissionKeys()
+    {
+        $result = $this->wpdb->get_results(
+            "SELECT * FROM {$this->table_name} WHERE name LIKE 'category-commission-%'"
+        );
 
         return $result;
     }

@@ -3,7 +3,7 @@
 namespace AffiliIR;
 
 
-require_once(ABSPATH.'wp-admin/includes/upgrade.php');
+require_once ABSPATH.'wp-admin/includes/upgrade.php';
 
 class Installer
 {
