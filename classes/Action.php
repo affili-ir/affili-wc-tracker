@@ -56,6 +56,7 @@ class Action
         $woocommerce = new AffiliIR_Woocommerce;
 
         $account_id  = $this->getAccountId();
+        $custom_code = $this->getCustomCode();
         $plugin_name = $this->plugin_name;
 
         $list_table = new AffiliIR_ListTable();
@@ -106,6 +107,45 @@ class Action
             exit;
         }
         else {
+            wp_die(
+                __( 'Invalid nonce specified', $this->plugin_name ),
+                __( 'Error', $this->plugin_name ),
+                [
+                    'response' 	=> 403,
+                    'back_link' => 'admin.php?page=' . $this->plugin_name,
+                ]
+            );
+        }
+    }
+
+    public function setCustomCode()
+    {
+        $nonce     = wp_verify_nonce($_POST['affili_custom_code'], 'eadkf#adk$fawlkrrt2RRe');
+        $condition = isset($_POST['affili_custom_code']) && $nonce;
+
+        if($condition) {
+            $custom_code = $_POST['custom_code'];
+
+            $data = [
+                'name'  => 'custom_code',
+                'value' => $custom_code,
+            ];
+
+            $custom_code_model = $this->getCustomCode();
+            if(empty($custom_code_model)) {
+                $this->wpdb->insert($this->table_name, $data, '%s');
+            }else {
+                $this->wpdb->update($this->table_name, $data, [
+                    'id' => $custom_code_model->id
+                ]);
+            }
+
+            $admin_notice = "success";
+            $message      = __('Data saved successful.', $this->plugin_name);
+
+            $this->customRedirect($message, $admin_notice);
+            exit;
+        }else {
             wp_die(
                 __( 'Invalid nonce specified', $this->plugin_name ),
                 __( 'Error', $this->plugin_name ),
@@ -202,6 +242,7 @@ class Action
         add_action('init', [$this, 'init']);
         add_action('admin_enqueue_scripts', [$this, 'loadAdminStyles']);
         add_action('admin_post_set_account_id', [$this, 'setAccountId']);
+        add_action('admin_post_set_custom_code', [$this, 'setCustomCode']);
 
         add_action('admin_notices', [$this, 'displayFlashNotices'], 12);
         add_action('wp_head', [$this, 'setAffiliJs'] );
@@ -230,6 +271,18 @@ class Action
             "SELECT * FROM {$this->table_name} WHERE name = 'account_id' limit 1"
         );
         $result = is_array($result) ? array_pop($result) : [];
+
+        return $result;
+    }
+
+    protected function getCustomCode()
+    {
+        $result = $this->wpdb->get_results(
+            "SELECT * FROM {$this->table_name} WHERE name = 'custom_code' limit 1"
+        );
+        $result = is_array($result) ? array_pop($result) : [];
+
+        $result->value = stripslashes($result->value);
 
         return $result;
     }

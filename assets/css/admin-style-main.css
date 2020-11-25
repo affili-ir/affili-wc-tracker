@@ -75,3 +75,14 @@
     cursor: pointer;
     vertical-align: middle;
 }
+
+
+.affili-card-inform {
+    min-width:100%;
+    margin-top:5px!important;
+}
+
+.affili-header-inform {
+    font-family: inherit!important;
+    margin-bottom: 10px!important;
+}

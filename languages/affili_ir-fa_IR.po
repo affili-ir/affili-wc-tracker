@@ -41,3 +41,6 @@ msgstr "کلید کمیسیون"
 
 msgid "Add Commission key"
 msgstr "افزودن کلید کمیسیون"
+
+msgid "Custom Code"
+msgstr "کد دلخواه"
