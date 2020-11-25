@@ -26,7 +26,7 @@ class Installer
                 id bigint(20) NOT NULL AUTO_INCREMENT,
                 created_at timestamp NOT NULL default CURRENT_TIMESTAMP,
                 name varchar(255) NOT NULL,
-                value tinytext DEFAULT '' NOT NULL,
+                value text DEFAULT '' NOT NULL,
                 PRIMARY KEY id (id),
                 UNIQUE (name)
             ) {$charset_collate};"
