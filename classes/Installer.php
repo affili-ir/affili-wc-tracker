@@ -17,6 +17,19 @@ class Installer
             return;
         }
 
+        $sql = self::sqlString();
+
+        dbDelta($sql);
+        update_option(self::$table.'_db_version', $db_version);
+    }
+
+    public static function deactivation()
+    {
+        //
+    }
+
+    public static function sqlString()
+    {
         global $wpdb;
 
         $table_name      = $wpdb->prefix.self::$table;
@@ -32,12 +45,6 @@ class Installer
             ) {$charset_collate};"
         ;
 
-        dbDelta($sql);
-        update_option(self::$table.'_db_version', $db_version);
-    }
-
-    public static function deactivation()
-    {
-        //
+        return $sql;
     }
 }

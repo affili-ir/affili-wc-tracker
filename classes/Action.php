@@ -5,10 +5,12 @@ namespace AffiliIR;
 
 require_once 'Woocommerce.php';
 require_once 'ListTable.php';
+require_once 'Installer.php';
 
 
 use AffiliIR\Woocommerce as AffiliIR_Woocommerce;
 use AffiliIR\ListTable as AffiliIR_ListTable;
+use AffiliIR\Installer as AffiliIR_Installer;
 
 class Action
 {
@@ -81,6 +83,8 @@ class Action
         $condition = isset($_POST['affili_set_account_id']) && $nonce;
 
         if($condition) {
+            $this->createTableIfNotExists();
+
             $account_id = sanitize_text_field($_POST['account_id']);
             $data = [
                 'name'  => 'account_id',
@@ -337,5 +341,13 @@ class Action
         }
         echo json_encode( $return );
         wp_die();
+    }
+
+    private function createTableIfNotExists()
+    {
+        $sql        = AffiliIR_Installer::sqlString();
+        $table_name = $this->wpdb->prefix.AffiliIR_Installer::$table;
+
+        maybe_create_table($table_name, $sql);
     }
 }
