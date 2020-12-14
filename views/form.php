@@ -12,11 +12,17 @@
     <div class="card affili-card-inform">
         <div class="affili-form-group affili-d-inline-block affili-input-inline-grid">
             <label class="affili-label" for="affili-ir-select2-category"><?php _e('Category', $plugin_name) ?></label>
-            <select class="affili-form-control" id="affili-ir-select2-categories" style="width:100%" name="category[id]"></select>
+            <select required class="affili-form-control" id="affili-ir-select2-category" style="width:100%" name="item[category_id]"></select>
         </div>
+        <?php if($show_brand): ?>
+            <div class="affili-form-group affili-d-inline-block affili-input-inline-grid">
+                <label class="affili-label" for="affili-ir-select2-brand"><?php _e('Brand', $plugin_name) ?></label>
+                <select class="affili-form-control" id="affili-ir-select2-brand" style="width:100%" name="item[brand_id]"></select>
+            </div>
+        <?php endif; ?>
         <div class="affili-form-group affili-d-inline-block affili-input-inline-grid">
             <label class="affili-label" for="commission-key"><?php _e('Commission key', $plugin_name) ?></label>
-            <input class="affili-form-control" dir="ltr" type="text" name="category[commission-key]" id="commission-key" />
+            <input required class="affili-form-control" dir="ltr" type="text" name="item[commission_key]" id="commission-key" />
         </div>
     </div>
 

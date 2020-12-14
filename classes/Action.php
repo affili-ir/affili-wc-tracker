@@ -6,8 +6,10 @@ namespace AffiliIR;
 require_once 'Woocommerce.php';
 require_once 'ListTable.php';
 require_once 'Installer.php';
+require_once 'ActivePluginsCheck.php';
 
 
+use AffiliIR\ActivePluginsCheck as AffiliIR_ActivePluginsCheck;
 use AffiliIR\Woocommerce as AffiliIR_Woocommerce;
 use AffiliIR\ListTable as AffiliIR_ListTable;
 use AffiliIR\Installer as AffiliIR_Installer;
@@ -55,6 +57,7 @@ class Action
 
     public function renderPage()
     {
+        $show_brand  = AffiliIR_ActivePluginsCheck::wooBrandActiveCheck();
         $woocommerce = new AffiliIR_Woocommerce;
 
         $account_id  = $this->getAccountId();
@@ -102,7 +105,7 @@ class Action
             }
 
             $woocommerce = new AffiliIR_Woocommerce;
-            $woocommerce->insertCommissionKeys($_POST['category']);
+            $woocommerce->insertCommissionKeys($_POST['item']);
 
             $admin_notice = "success";
             $message      = __('Data saved successful.', $this->plugin_name);
@@ -262,6 +265,7 @@ class Action
         add_action('woocommerce_thankyou', [$this, 'trackOrders']);
 
         add_action('wp_ajax_affili_find_category', [$this, 'findCategoryAjax']);
+        add_action('wp_ajax_affili_find_brand', [$this, 'findBrandAjax']);
     }
 
     public static function factory()
@@ -337,6 +341,25 @@ class Action
             $return[] = [
                 $result->cat_ID,
                 $result->cat_name,
+            ];
+        }
+        echo json_encode( $return );
+        wp_die();
+    }
+
+    public function findBrandAjax()
+    {
+        // we will pass brand IDs and names to this array
+        $return = [];
+
+        $search_results = (new AffiliIR_Woocommerce)->getBrands(null, [
+            'name__like' => $_GET['q'],
+        ]);
+
+        foreach($search_results as $result) {
+            $return[] = [
+                $result->term_id,
+                $result->name,
             ];
         }
         echo json_encode( $return );

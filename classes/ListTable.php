@@ -4,6 +4,7 @@ namespace AffiliIR;
 
 
 require_once 'Woocommerce.php';
+require_once 'ActivePluginsCheck.php';
 
 // WP_List_Table is not loaded automatically so we need to load it in our application
 if( ! class_exists( 'WP_List_Table' ) ) {
@@ -11,6 +12,7 @@ if( ! class_exists( 'WP_List_Table' ) ) {
 }
 
 use AffiliIR\Woocommerce as AffiliIR_Woocommerce;
+use AffiliIR\ActivePluginsCheck as AffiliIR_ActivePluginsCheck;
 
 class ListTable extends \WP_List_Table
 {
@@ -55,7 +57,16 @@ class ListTable extends \WP_List_Table
         $columns = [
             'id'        => __('Category ID', $this->plugin_name),
             'category'  => __('Category', $this->plugin_name),
-            'value'     => __('Commission key', $this->plugin_name),
+        ];
+
+        if(AffiliIR_ActivePluginsCheck::wooBrandActiveCheck()) {
+            $columns += [
+                'brand' => __('Brand', $this->plugin_name),
+            ];
+        }
+
+        $columns += [
+            'value' => __('Commission key', $this->plugin_name),
         ];
 
         return $columns;
@@ -94,7 +105,14 @@ class ListTable extends \WP_List_Table
 
         $commission_keys = $woocommerce->getCommissionKeys();
         foreach($commission_keys as $key => $commission) {
-            $cat_id = str_replace('category-commission-', '', $commission->name);
+            $cat_id = str_replace('commission-cat-', '', $commission->name);
+            if($this->strContains($cat_id, 'brand-')) {
+                $cat_id = $this->strBefore($cat_id, 'brand-');
+            }
+
+            $brand_id = $this->strAfter($commission->name, 'brand-');
+
+            $commission_keys[$key]->brand    = $brand_id ? get_the_category_by_ID((int)$brand_id) : null;
             $commission_keys[$key]->category = get_the_category_by_ID((int)$cat_id);
         }
 
@@ -114,6 +132,7 @@ class ListTable extends \WP_List_Table
         switch( $column_name ) {
             case 'id':
             case 'category':
+            case 'brand':
             case 'value':
                 return $item[ $column_name ];
 
@@ -154,6 +173,29 @@ class ListTable extends \WP_List_Table
         }
 
         return -$result;
+    }
+
+    private function strContains($haystack, $needles)
+    {
+        foreach ((array) $needles as $needle) {
+            if ($needle !== '' && mb_strpos($haystack, $needle) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function strBefore($subject, $search)
+    {
+        return $search === '' ? $subject : explode($search, $subject)[0];
+    }
+
+    private function strAfter($subject, $search)
+    {
+        $result = $search === '' ? $subject : array_reverse(explode($search, $subject, 2))[0];
+
+        return $result === $subject ? null : $result;
     }
 }
 ?>
