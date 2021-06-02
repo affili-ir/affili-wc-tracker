@@ -32,8 +32,7 @@ class Installer
     {
         global $wpdb;
 
-        $table_name      = $wpdb->prefix.self::$table;
-        $charset_collate = $wpdb->get_charset_collate();
+        $table_name = $wpdb->prefix.self::$table;
 
         $sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
                 id bigint(20) NOT NULL AUTO_INCREMENT,
@@ -42,7 +41,7 @@ class Installer
                 value text DEFAULT '' NOT NULL,
                 PRIMARY KEY id (id),
                 UNIQUE (name)
-            ) {$charset_collate};"
+            );"
         ;
 
         return $sql;
