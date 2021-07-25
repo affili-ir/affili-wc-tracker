@@ -105,8 +105,14 @@ class Woocommerce
             $options['meta_data'][$key] = $line_item;
         }
 
-        if($coupons = $order->get_coupon_codes()) {
-            $options['coupon'] = array_values($coupons)[0] ?? '';
+        if ($this->isWoo3()) {
+            if ($coupons = $order->get_data()['coupon_lines']) {
+                $options['coupon'] = array_values($coupons)[0]->get_code() ?? '';
+            }
+        } else {
+            if ($coupons = $order->get_coupon_codes()) {
+                $options['coupon'] = array_values($coupons)[0] ?? '';
+            }
         }
 
         $external_id  = $this->isWoo3() ? $order->get_id() : $order->id;
