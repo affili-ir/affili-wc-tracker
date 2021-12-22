@@ -7,8 +7,8 @@ require_once ABSPATH.'wp-admin/includes/upgrade.php';
 
 class Installer
 {
-    public static $table         = 'affili';
-    public static $table_version = '1.1.0';
+    public static $table = 'affili';
+    public static $table_version = '2.0.0';
 
     public static function activation()
     {

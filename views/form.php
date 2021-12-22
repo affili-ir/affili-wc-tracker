@@ -8,30 +8,9 @@
             <input required class="affili-form-control" dir="ltr" type="text" name="account_id" id="accountId" value="<?php echo $account_id ? $account_id->value : ''; ?>" />
         </div>
     </div>
-    <h2 class="affili-header-inform"><?php _e('Add Commission key', $plugin_name) ?></h2>
-    <div class="card affili-card-inform">
-        <div class="affili-form-group affili-d-inline-block affili-input-inline-grid">
-            <label class="affili-label" for="affili-ir-select2-category"><?php _e('Category', $plugin_name) ?></label>
-            <select class="affili-form-control" id="affili-ir-select2-category" style="width:100%" name="item[category_id]"></select>
-        </div>
-        <?php if($show_brand): ?>
-            <div class="affili-form-group affili-d-inline-block affili-input-inline-grid">
-                <label class="affili-label" for="affili-ir-select2-brand"><?php _e('Brand', $plugin_name) ?></label>
-                <select class="affili-form-control" id="affili-ir-select2-brand" style="width:100%" name="item[brand_id]"></select>
-            </div>
-        <?php endif; ?>
-        <div class="affili-form-group affili-d-inline-block affili-input-inline-grid">
-            <label class="affili-label" for="commission-key"><?php _e('Commission key', $plugin_name) ?></label>
-            <input class="affili-form-control" dir="ltr" type="text" name="item[commission_key]" id="commission-key" />
-        </div>
-    </div>
 
     <input class="button button-primary" style="margin-top:15px;" value="<?php _e('Submit', $plugin_name); ?>" type="submit">
 </form>
-
-<div class="wrap">
-    <?php $list_table->display(); ?>
-</div>
 
 <form style="margin-left:20px;" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="POST">
     <input type="hidden" name="action" value="set_custom_code" />

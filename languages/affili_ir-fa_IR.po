@@ -44,6 +44,3 @@ msgstr "افزودن کلید کمیسیون"
 
 msgid "Custom Code"
 msgstr "کد دلخواه"
-
-msgid "Brand"
-msgstr "برند"
