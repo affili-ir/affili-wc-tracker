@@ -4,12 +4,10 @@ namespace AffiliIR;
 
 
 require_once 'Woocommerce.php';
-require_once 'ListTable.php';
 require_once 'Installer.php';
 
 
 use AffiliIR\Woocommerce as AffiliIR_Woocommerce;
-use AffiliIR\ListTable as AffiliIR_ListTable;
 use AffiliIR\Installer as AffiliIR_Installer;
 
 class Action
@@ -55,26 +53,18 @@ class Action
 
     public function renderPage()
     {
-        $woocommerce = new AffiliIR_Woocommerce;
-
         $account_id  = $this->getAccountId();
         $custom_code = $this->getCustomCode();
         $plugin_name = $this->plugin_name;
-
-        $list_table = new AffiliIR_ListTable();
-        $list_table->prepare_items();
 
         include_once __DIR__.'/../views/form.php';
     }
 
     public function loadAdminStyles()
     {
-        wp_enqueue_style( 'affili-ir-admin-style', plugins_url('assets/css/admin-style-main.css',__DIR__), false, '1.0.0' );
+        wp_enqueue_style( 'affili-ir-admin-style', plugins_url('assets/css/admin-style-main.css',__DIR__), false, '2.0.0' );
 
-        wp_enqueue_style('select2', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css' );
-	    wp_enqueue_script('select2', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js', array('jquery') );
-
-        wp_enqueue_script('affili-ir-admin-script',  plugins_url('assets/js/admin-script-main.js', __DIR__), array( 'jquery', 'select2' ) );
+        wp_enqueue_script('affili-ir-admin-script',  plugins_url('assets/js/admin-script-main.js', __DIR__), array( 'jquery') );
     }
 
     public function setAccountId()
@@ -100,9 +90,6 @@ class Action
                     'id' => $account_id_model->id
                 ]);
             }
-
-            $woocommerce = new AffiliIR_Woocommerce;
-            $woocommerce->insertCommissionKeys($_POST['category']);
 
             $admin_notice = "success";
             $message      = __('Data saved successful.', $this->plugin_name);
@@ -183,7 +170,7 @@ class Action
     {
         $script = $this->createInlineScript();
 
-        wp_enqueue_script("affili-ir-script", "https://analytics.affili.ir/scripts/affili-js.js");
+        wp_enqueue_script("affili-ir-script", "https://analytics.affili.ir/scripts/affili-v2.js");
         wp_add_inline_script("affili-ir-script", $script);
     }
 
@@ -209,33 +196,28 @@ class Action
 
     public function trackOrders($order_id)
     {
-        $order_id    = apply_filters('woocommerce_thankyou_order_id', absint($GLOBALS['order-received']));
-        $order_key   = apply_filters('woocommerce_thankyou_order_key', empty($_GET['key']) ? '' : wc_clean($_GET['key']));
+        $order_id = apply_filters('woocommerce_thankyou_order_id', absint($GLOBALS['order-received']));
+        $order_key = apply_filters('woocommerce_thankyou_order_key', empty($_GET['key']) ? '' : wc_clean($_GET['key']));
         $woocommerce = new AffiliIR_Woocommerce;
-        $order       = wc_get_order($order_id);
+        $order = wc_get_order($order_id);
 
         if ($order_id <= 0) return;
 
         $order_key_check = $woocommerce->isWoo3() ? $order->get_order_key() : $order->order_key;
 
-        if ($order_key_check !== $order_key) return;
+        if ($order_key_check != $order_key) return;
 
         $data = $woocommerce->getOrderData($order);
 
-        $commissions  = $data['commissions'];
-        $options      = $data['options'];
-        $external_id  = $data['external_id'];
-        $amount       = $data['amount'];
-        $is_multi     = $data['is_multi'];
-        $default_name = $data['default_name'];
-        // $order_key   = $data['order_key'];
+        $order_id  = $data['order_id'];
+        $amount = $data['amount'];
+        $options = [
+            'coupon' => $data['coupon'],
+            'products' => $data['products']
+        ];
+        $options = count($options) ? json_encode($options) : json_encode($options, JSON_FORCE_OBJECT);
 
-        // Check if we have multiple commission names
-        if($is_multi) {
-            $script = "affili('conversionMulti', '{$external_id}', '{$amount}', {$commissions}, {$options});";
-        }else {
-            $script = "affili('conversion', '{$external_id}', '{$amount}', '{$default_name}', {$options})";
-        }
+        $script = "affili('conversion', '{$order_id}', '{$amount}', {$options})";
 
         wp_add_inline_script("affili-ir-script", $script);
     }
@@ -260,8 +242,6 @@ class Action
         add_action('wp_head', [$this, 'setAffiliJs'] );
 
         add_action('woocommerce_thankyou', [$this, 'trackOrders']);
-
-        add_action('wp_ajax_affili_find_category', [$this, 'findCategoryAjax']);
     }
 
     public static function factory()
@@ -323,24 +303,6 @@ class Action
 
         // We update the option with our notices array
         update_option('affili_flash_notices', $notices );
-    }
-
-    public function findCategoryAjax()
-    {
-        // we will pass category IDs and titles to this array
-        $return = [];
-
-        $search_results = (new AffiliIR_Woocommerce)->getCategories(null, [
-            'name__like' => $_GET['q'],
-        ]);
-        foreach($search_results as $result) {
-            $return[] = [
-                $result->cat_ID,
-                $result->cat_name,
-            ];
-        }
-        echo json_encode( $return );
-        wp_die();
     }
 
     private function createTableIfNotExists()

@@ -4,8 +4,8 @@ namespace AffiliIR;
 
 class Woocommerce
 {
-    private $table_name;
-    private $wpdb;
+    protected $table_name;
+    protected $wpdb;
 
     public function __construct()
     {
@@ -15,164 +15,43 @@ class Woocommerce
         $this->table_name = $wpdb->prefix . 'affili';
     }
 
-    public function getCategories($category_id = null, $options = [])
-    {
-        $taxonomy     = 'product_cat';
-        $orderby      = 'id';
-        $show_count   = 0;      // 1 for yes, 0 for no
-        $pad_counts   = 0;      // 1 for yes, 0 for no
-        $hierarchical = 1;      // 1 for yes, 0 for no
-        $title        = '';
-        $empty        = 0;
-
-        $args = [
-            'taxonomy'     => $taxonomy,
-            'orderby'      => $orderby,
-            'show_count'   => $show_count,
-            'pad_counts'   => $pad_counts,
-            'hierarchical' => $hierarchical,
-            'title_li'     => $title,
-            'hide_empty'   => $empty,
-        ];
-
-        if($category_id !== null) {
-            $args += [
-                'parent'       => $category_id,
-                'child_of'     => 0,
-            ];
-        }
-
-        if(is_array($options) && $options) {
-            $args = array_merge($args, $options);
-        }
-
-        return get_categories( $args );
-    }
-
-    public function insertCommissionKeys($item)
-    {
-        if(empty($item['id'])) {
-            return;
-        }
-
-        $commission_key = $this->findCommissionKey($item['id']);
-
-        $data = [
-            'name'  => "category-commission-{$item['id']}",
-            'value' => $item['commission-key'],
-        ];
-
-        if(empty($commission_key)) {
-            $this->wpdb->insert($this->table_name, $data, '%s');
-        }else {
-            $this->wpdb->update($this->table_name, $data, [
-                'id' => $commission_key->id
-            ]);
-        }
-    }
-
-    public function findCommissionKey($category_id)
-    {
-        $result = $this->wpdb->get_results(
-            "SELECT * FROM {$this->table_name} WHERE name = 'category-commission-{$category_id}' limit 1"
-        );
-        $result = is_array($result) ? array_pop($result) : [];
-
-        return $result;
-    }
-
-    public function getCommissionKeys()
-    {
-        $result = $this->wpdb->get_results(
-            "SELECT * FROM {$this->table_name} WHERE name LIKE 'category-commission-%'"
-        );
-
-        return $result;
-    }
-
     public function getOrderData($order)
     {
-        $options        = [];
-        $commissions    = [];
-
+        $coupon = '';
+        $products = [];
         foreach ($order->get_items() as $item) {
-            $subtotal      = $this->getOrderItemSubtotal($order, $item);
-            $commissions[] = $this->getOrderItemCommissions($item, $subtotal);
+            $item_subtotal = floatval($this->wooRound($item->get_subtotal()));
 
-            $key       = "product-{$item->get_product_id()}";
-            $line_item = "{$item['name']} - qty: {$item['qty']}";
-
-            $options['meta_data'][$key] = $line_item;
+            $products[] = [
+                'product_page_id' => $item->get_product_id(),
+                'sku' => $item['name'],
+                'unit_price' => $item_subtotal / $item['qty'],
+                'quantity' => $item['qty'],
+                'total_price' => $item_subtotal,
+            ];
         }
 
         if ($this->isWoo3()) {
             if ($coupons = $order->get_data()['coupon_lines']) {
-                $options['coupon'] = array_values($coupons)[0]->get_code() ?? '';
+                $coupon = array_values($coupons)[0]->get_code() ?? '';
             }
         } else {
             if ($coupons = $order->get_coupon_codes()) {
-                $options['coupon'] = array_values($coupons)[0] ?? '';
+                $coupon = array_values($coupons)[0] ?? '';
             }
         }
 
-        $external_id  = $this->isWoo3() ? $order->get_id() : $order->id;
+        $order_id  = $this->isWoo3() ? $order->get_id() : $order->id;
 
-        $amount       = $order->get_subtotal() - $order->get_total_discount();
-        $amount       = $order->get_currency() === 'IRT' ? $amount * 10 : $amount;
-
-        $uniq_names   = array_unique(array_column($commissions, 'name'));
-        $is_multi     = count($uniq_names) > 1;
-
-        $default_name = count($uniq_names) === 1 ? $uniq_names[0] : 'default';
-
-        $commissions = count($commissions) ? json_encode($commissions) : json_encode($commissions, JSON_FORCE_OBJECT);
-        $options     = count($options) ? json_encode($options) : json_encode($options, JSON_FORCE_OBJECT);
-
+        $amount = $order->get_subtotal() - $order->get_total_discount();
+        $amount = $order->get_currency() === 'IRT' ? $amount * 10 : $amount;
 
         return [
-            'commissions'   => $commissions,
-            'options'       => $options,
-            'external_id'   => $external_id,
-            'amount'        => $amount,
-            'is_multi'      => $is_multi,
-            'default_name'  => $default_name,
-            // 'order_key'     => $order->get_order_key(),
+            'order_id' => $order_id,
+            'amount' => $amount,
+            'products' => $products,
+            'coupon' => $coupon
         ];
-
-    }
-
-    private function getOrderItemSubtotal($order, $item)
-    {
-        $item_subtotal = floatval($this->wooRound($item->get_subtotal()));
-        if ($item_subtotal === 0.00) {
-            return 0;
-        }
-
-        $proportional_discount = (
-            $item_subtotal / $this->wooRound($order->get_subtotal())
-        ) * $order->get_total_discount();
-
-        $subtotal = $item_subtotal - $proportional_discount;
-        $subtotal = $order->get_currency() === 'IRT' ? $subtotal * 10 : $subtotal;
-
-        return $subtotal;
-    }
-
-    private function getOrderItemCommissions($item, $subtotal)
-    {
-        $category_commission_type = false;
-        $categories = wp_get_post_terms($item->get_product_id(), 'product_cat');
-        foreach ( $categories as $category ) {
-            $commission_key = $this->findCommissionKey($category->term_id);
-            if($commission_key && $commission_key->value) {
-                $category_commission_type = $commission_key->value;
-            }
-        }
-
-        return $category_commission_type ? [
-            'sub_amount'    => $subtotal,
-            'name'          => $category_commission_type ?: 'default',
-        ] : [];
     }
 
     /**

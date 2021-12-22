@@ -7,7 +7,7 @@
  * Plugin Name:       affili_ir
  * Plugin URI:        https://github.com/affili-ir/wordpress
  * Description:       The WordPress plugin for Affili's merchants.
- * Version:           1.1.0
+ * Version:           2.0.0
  * Author:            Affili IR
  * Author URI:        https://affili.ir
  * License:           GPLv2 or later

@@ -39,44 +39,6 @@
     }
 }
 
-/* For Select2
-.select2-container .select2-selection--single {
-    height: inherit;
-    min-height: calc(1.5em + .75rem + 2px);
-} */
-
-
-.wp-core-ui .select2-container .select2-selection--single {
-    display: block;
-    width: 100%;
-    height: calc(1.5em + .75rem + 2px);
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #ced4da;
-    border-radius: .25rem;
-    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-}
-
-.wp-core-ui .select2-container .select2-selection--single  {
-    font-size: 14px;
-    line-height: 2;
-    color: #32373c;
-    border-color: #7e8993;
-    box-shadow: none;
-    border-radius: 3px;
-    padding: 0 8px 0 24px;
-    min-height: 30px;
-    -webkit-appearance: none;
-    cursor: pointer;
-    vertical-align: middle;
-}
-
-
 .affili-card-inform {
     min-width:100%;
     margin-top:5px!important;
