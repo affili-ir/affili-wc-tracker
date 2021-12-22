@@ -2,6 +2,7 @@
 
 namespace AffiliIR;
 
+
 class Woocommerce
 {
     protected $table_name;
