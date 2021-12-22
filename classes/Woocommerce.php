@@ -18,10 +18,10 @@ class Woocommerce
 
     public function getOrderData($order)
     {
-        $coupon = '';
         $products = [];
         foreach ($order->get_items() as $item) {
             $item_subtotal = floatval($this->wooRound($item->get_subtotal()));
+            $item_subtotal = $order->get_currency() === 'IRT' ? $item_subtotal * 10 : $item_subtotal;
 
             $products[] = [
                 'product_page_id' => $item->get_product_id(),
@@ -32,6 +32,7 @@ class Woocommerce
             ];
         }
 
+        $coupon = '';
         if ($this->isWoo3()) {
             if ($coupons = $order->get_data()['coupon_lines']) {
                 $coupon = array_values($coupons)[0]->get_code() ?? '';
