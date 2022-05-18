@@ -1,6 +1,6 @@
-=== Affili IR ===
+=== Affili WC Tracker ===
 Contributors: davodsaraei
-Tags: affili-ir, affili, affiliate-network, affiliate-marketing
+Tags: affili-wc-tracker, affili, affiliate-network, affiliate-marketing
 Requires at least: 4.6
 Requires PHP: 7.2.*
 Tested up to: 5.5.3

@@ -1,28 +1,21 @@
 <?php
 
-namespace AffiliIR;
+namespace AffiliWCTracker;
 
 
 require_once 'Woocommerce.php';
 require_once 'Installer.php';
 
 
-use AffiliIR\Woocommerce as AffiliIR_Woocommerce;
-use AffiliIR\Installer as AffiliIR_Installer;
+use AffiliWCTracker\Woocommerce as AffiliWCTracker_Woocommerce;
 
 class Action
 {
-    protected $plugin_name = 'affili_ir';
-
-    private $table_name;
-    private $wpdb;
+    protected $plugin_name = 'affili_wc_tracker';
 
     public function __construct()
     {
-        global $wpdb;
-
-        $this->wpdb       = $wpdb;
-        $this->table_name = $wpdb->prefix . 'affili';
+        //
     }
 
     public function init()
@@ -62,34 +55,23 @@ class Action
 
     public function loadAdminStyles()
     {
-        wp_enqueue_style( 'affili-ir-admin-style', plugins_url('assets/css/admin-style-main.css',__DIR__), false, '2.0.0' );
+        wp_enqueue_style( 'affili-wc-tracker-admin-style', plugins_url('assets/css/admin-style-main.css',__DIR__), false, '2.0.0' );
 
-        wp_enqueue_script('affili-ir-admin-script',  plugins_url('assets/js/admin-script-main.js', __DIR__), array( 'jquery') );
+        wp_enqueue_script('affili-wc-tracker-admin-script',  plugins_url('assets/js/admin-script-main.js', __DIR__), array( 'jquery') );
     }
 
-    public function setAccountId()
+    public function setSettings()
     {
-        $nonce     = wp_verify_nonce($_POST['affili_set_account_id'], 'eadkf#adk$fawlkaawwlRRe');
-        $condition = isset($_POST['affili_set_account_id']) && $nonce;
+        $nonce     = wp_verify_nonce($_POST['affili_set_settings'], 'eadkf#adk$fawlkaawwlRRe');
+        $condition = isset($_POST['affili_set_settings']) && $nonce;
 
         if($condition) {
-            $this->createTableIfNotExists();
-
             $account_id = sanitize_text_field($_POST['account_id']);
-            $data = [
-                'name'  => 'account_id',
-                'value' => $account_id,
-            ];
+            $custom_code = $_POST['custom_code'];
 
-            $account_id_model = $this->getAccountId();
 
-            if(empty($account_id_model)) {
-                $this->wpdb->insert($this->table_name, $data, '%s');
-            }else {
-                $this->wpdb->update($this->table_name, $data, [
-                    'id' => $account_id_model->id
-                ]);
-            }
+            update_option($this->plugin_name.'_account_id', $account_id);
+            update_option($this->plugin_name.'_custom_code', $custom_code);
 
             $admin_notice = "success";
             $message      = __('Data saved successful.', $this->plugin_name);
@@ -109,47 +91,8 @@ class Action
         }
     }
 
-    public function setCustomCode()
-    {
-        $nonce     = wp_verify_nonce($_POST['affili_custom_code'], 'eadkf#adk$fawlkrrt2RRe');
-        $condition = isset($_POST['affili_custom_code']) && $nonce;
-
-        if($condition) {
-            $custom_code = $_POST['custom_code'];
-
-            $data = [
-                'name'  => 'custom_code',
-                'value' => $custom_code,
-            ];
-
-            $custom_code_model = $this->getCustomCode();
-            if(empty($custom_code_model)) {
-                $this->wpdb->insert($this->table_name, $data, '%s');
-            }else {
-                $this->wpdb->update($this->table_name, $data, [
-                    'id' => $custom_code_model->id
-                ]);
-            }
-
-            $admin_notice = "success";
-            $message      = __('Data saved successful.', $this->plugin_name);
-
-            $this->customRedirect($message, $admin_notice);
-            exit;
-        }else {
-            wp_die(
-                __( 'Invalid nonce specified', $this->plugin_name ),
-                __( 'Error', $this->plugin_name ),
-                [
-                    'response' 	=> 403,
-                    'back_link' => 'admin.php?page=' . $this->plugin_name,
-                ]
-            );
-        }
-    }
-
     public function displayFlashNotices() {
-        $notices = get_option('affili_flash_notices', []);
+        $notices = get_option($this->plugin_name.'_flash_notices', []);
 
         // Iterate through our notices to be displayed and print them.
         foreach ($notices as $notice) {
@@ -162,7 +105,7 @@ class Action
 
         // We reset our options to prevent notices being displayed forever.
         if(!empty($notices)) {
-            delete_option('affili_flash_notices', []);
+            delete_option($this->plugin_name.'_flash_notices', []);
         }
     }
 
@@ -170,24 +113,24 @@ class Action
     {
         $script = $this->createInlineScript();
 
-        wp_enqueue_script("affili-ir-script", "https://analytics.affili.ir/scripts/affili-v2.js");
-        wp_add_inline_script("affili-ir-script", $script);
+        wp_enqueue_script("affili-wc-tracker-script", "https://analytics.affili.ir/scripts/affili-v2.js");
+        wp_add_inline_script("affili-wc-tracker-script", $script);
     }
 
     public function createInlineScript()
     {
-        $model = $this->getAccountId();
+        $account_id = $this->getAccountId();
 
         $script = '';
 
-        if($model) {
+        if($account_id) {
             $script .= 'window.affiliData = window.affiliData || [];function affili(){affiliData.push(arguments);}'.PHP_EOL;
-            $script .= 'affili("create", "'.$model->value.'");'.PHP_EOL;
+            $script .= 'affili("create", "'.$account_id.'");'.PHP_EOL;
             $script .= 'affili("detect");'.PHP_EOL;
 
             $custom_code = $this->getCustomCode();
             if($custom_code) {
-                $script .= $custom_code->value;
+                $script .= $custom_code;
             }
         }
 
@@ -198,7 +141,7 @@ class Action
     {
         $order_id = apply_filters('woocommerce_thankyou_order_id', absint($GLOBALS['order-received']));
         $order_key = apply_filters('woocommerce_thankyou_order_key', empty($_GET['key']) ? '' : wc_clean($_GET['key']));
-        $woocommerce = new AffiliIR_Woocommerce;
+        $woocommerce = new AffiliWCTracker_Woocommerce;
         $order = wc_get_order($order_id);
 
         if ($order_id <= 0) return;
@@ -219,12 +162,12 @@ class Action
 
         $script = "affili('conversion', '{$order_id}', '{$amount}', {$options})";
 
-        wp_add_inline_script("affili-ir-script", $script);
+        wp_add_inline_script("affili-wc-tracker-script", $script);
     }
 
     public function loadTextDomain()
     {
-        $lang_dir = AFFILI_BASENAME.'/languages/';
+        $lang_dir = AFFILI_WC_TRACKER_BASENAME.'/languages/';
         load_plugin_textdomain($this->plugin_name, false, $lang_dir);
     }
 
@@ -235,8 +178,7 @@ class Action
         add_action('admin_menu', [$this, 'menu']);
         add_action('init', [$this, 'init']);
         add_action('admin_enqueue_scripts', [$this, 'loadAdminStyles']);
-        add_action('admin_post_set_account_id', [$this, 'setAccountId']);
-        add_action('admin_post_set_custom_code', [$this, 'setCustomCode']);
+        add_action('admin_post_set_settings', [$this, 'setSettings']);
 
         add_action('admin_notices', [$this, 'displayFlashNotices'], 12);
         add_action('wp_head', [$this, 'setAffiliJs'] );
@@ -259,23 +201,15 @@ class Action
 
     protected function getAccountId()
     {
-        $result = $this->wpdb->get_results(
-            "SELECT * FROM {$this->table_name} WHERE name = 'account_id' limit 1"
-        );
-        $result = is_array($result) ? array_pop($result) : [];
-
-        return $result;
+        return get_option($this->plugin_name.'_account_id');
     }
 
     protected function getCustomCode()
     {
-        $result = $this->wpdb->get_results(
-            "SELECT * FROM {$this->table_name} WHERE name = 'custom_code' limit 1"
-        );
-        $result = is_array($result) ? array_pop($result) : [];
+        $result = get_option($this->plugin_name.'_custom_code');
 
         if($result) {
-            $result->value = stripslashes($result->value);
+            $result = stripslashes($result);
         }
 
         return $result;
@@ -291,7 +225,7 @@ class Action
     }
 
     protected function addFlashNotice($notice = '', $type = 'success', $dismissible = true ) {
-        $notices = get_option('affili_flash_notices', []);
+        $notices = get_option($this->plugin_name.'_flash_notices', []);
 
         $dismissible_text = $dismissible ? 'is-dismissible' : '';
 
@@ -302,14 +236,6 @@ class Action
         ]);
 
         // We update the option with our notices array
-        update_option('affili_flash_notices', $notices );
-    }
-
-    private function createTableIfNotExists()
-    {
-        $sql        = AffiliIR_Installer::sqlString();
-        $table_name = $this->wpdb->prefix.AffiliIR_Installer::$table;
-
-        maybe_create_table($table_name, $sql);
+        update_option($this->plugin_name.'_flash_notices', $notices );
     }
 }

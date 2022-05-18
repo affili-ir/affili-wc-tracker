@@ -1,10 +1,10 @@
 <?php
 /**
- * Uninstall Affili Tracker
+ * Uninstall Affili WC Tracker
  *
- * @package     Affili merchant's tracker
+ * @package     Affili WC tracker
  * @subpackage  Uninstall
- * @license     https://github.com/affili-ir/wordpress/blob/master/LICENSE
+ * @license     https://github.com/affili-ir/affili-wc-tracker/blob/master/LICENSE
  * @since       1.1.0
  */
 
@@ -15,10 +15,3 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 
 global $wpdb;
 include_once __DIR__.'/classes/Installer.php';
-
-$table_name = $wpdb->prefix.AffiliIR\Installer::$table;
-
-$sql = "DROP TABLE IF EXISTS {$table_name}";
-$wpdb->query($sql);
-
-delete_option(AffiliIR\Installer::$table.'_db_version');
