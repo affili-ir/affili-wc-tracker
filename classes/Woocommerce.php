@@ -1,19 +1,13 @@
 <?php
 
-namespace AffiliIR;
+namespace AffiliWCTracker;
 
 
 class Woocommerce
 {
-    protected $table_name;
-    protected $wpdb;
-
     public function __construct()
     {
-        global $wpdb;
-
-        $this->wpdb       = $wpdb;
-        $this->table_name = $wpdb->prefix . 'affili';
+        //
     }
 
     public function getOrderData($order)
