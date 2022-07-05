@@ -139,7 +139,7 @@ class Action
 
     public function trackOrders($order_id)
     {
-        $order_id = apply_filters('woocommerce_thankyou_order_id', absint($GLOBALS['order-received']));
+        $order_id = apply_filters('woocommerce_thankyou_order_id', absint($order_id));
         $order_key = apply_filters('woocommerce_thankyou_order_key', empty($_GET['key']) ? '' : wc_clean($_GET['key']));
         $woocommerce = new AffiliWCTracker_Woocommerce;
         $order = wc_get_order($order_id);
