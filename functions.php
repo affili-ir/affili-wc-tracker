@@ -13,6 +13,7 @@
  * License:           GPLv2 or later
  * License URI:       https://github.com/affili-ir/wordpress/blob/master/LICENSE
  * Text Domain:       affili_wc_tracker
+ * Domain Path:       /languages
  */
 
 if( !defined('ABSPATH') ) {
@@ -440,18 +441,9 @@ class AFFL_Script
 
     public function trackOrders($order_id)
     {
-        $order = false;
-
         $order_id = apply_filters('woocommerce_thankyou_order_id', absint($order_id));
-        $order_key = apply_filters('woocommerce_thankyou_order_key', empty($_GET['key']) ? '' : wc_clean(wp_unslash( $_GET['key']))); // WPCS: input var ok, CSRF ok.
 
-        if ($order_id > 0) {
-            $order = wc_get_order($order_id);
-            if (!$order || !hash_equals($order->get_order_key(), $order_key)) {
-                $order = false;
-            }
-        }
-
+        $order = wc_get_order($order_id);
         if (!$order) {
             return false;
         }
@@ -476,7 +468,6 @@ class AFFL_Script
             $coupon = $coupon->get_code();
         }
 
-        $order_id = $order->get_id();
         $amount = $order->get_subtotal() - $order->get_total_discount();
         $options = [
             'coupon' => $coupon,
