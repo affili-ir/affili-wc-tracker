@@ -7,7 +7,7 @@
  * Plugin Name:       شبکه همکاری در فروش افیلی
  * Plugin URI:        https://github.com/affili-ir/wordpress
  * Description:       ردیابی خریدها و لیدهای انجام شده توسط بازاریابان افیلی
- * Version:           4.0.0
+ * Version:           3.0.0
  * Author:            Affili IR
  * Author URI:        https://affili.ir
  * License:           GPLv2 or later
@@ -419,27 +419,101 @@ class AFFL_WC_Products_Extractor extends WP_REST_Controller
 
 class AFFL_Script
 {
-    public function loadScript()
+    protected $queue = [];
+    protected $type_attr = " type='text/javascript'";
+
+    public function addToQueue($handle, $src = false)
     {
-        $script = '';
-        $script .= 'window.affiliData = window.affiliData || [];function affili(){affiliData.push(arguments);}'.PHP_EOL;
-        $script .= 'affili(\'create\');'.PHP_EOL;
-
-        wp_enqueue_script('affili-wc-tracker-script', 'https://analytics.affili.ir/scripts/affili-v2.js');
-        wp_add_inline_script('affili-wc-tracker-script', $script);
-
-        function asyncAffiliScript($tag, $handle) {
-            if ($handle === 'affili-wc-tracker-script') {
-                $tag = str_replace( '></', ' async></', $tag );
-            }
-
-            return $tag;
-        }
-
-        add_filter('script_loader_tag', 'asyncAffiliScript', 10, 2);
+        $this->queue[$handle] = [
+            'src' => $src,
+        ];
     }
 
-    public function trackOrders($order_id)
+    public function addInline($handle, $data, $position = 'after')
+    {
+        if (!isset($this->queue[$handle])) {
+            $this->addToQueue($handle);
+        }
+
+        if ($position !== 'after') {
+            $position = 'before';
+        }
+
+        $inl = $this->queue[$handle][$position] ?? [];
+
+        array_push($inl, $data);
+
+        $this->queue[$handle][$position] = $inl;
+    }
+
+    public function printScripts()
+    {
+        foreach ($this->queue as $handle => $sc) {
+            $tag = '';
+
+            $before_handle = isset($sc['before']) ? trim( implode( "\n", $sc['before'] ), "\n" ) : '';
+            $after_handle = isset($sc['after']) ? trim( implode( "\n", $sc['after'] ), "\n" ) : '';
+
+            if ($before_handle) {
+                $before_handle = sprintf( "<script%s id='%s-js-before'>\n%s\n</script>\n", $this->type_attr, esc_attr( $handle ), $before_handle );
+            }
+
+            if ($after_handle) {
+                $after_handle = sprintf( "<script%s id='%s-js-after'>\n%s\n</script>\n", $this->type_attr, esc_attr( $handle ), $after_handle );
+            }
+
+            if ( $before_handle || $after_handle ) {
+                $inline_script_tag = $before_handle . $after_handle;
+            } else {
+                $inline_script_tag = '';
+            }
+
+            $src = $sc['src'] ?? false;
+
+            if (!$src) {
+                if ( $inline_script_tag ) {
+                    echo $inline_script_tag;
+                }
+
+                return true;
+            }
+
+            $tag  = $before_handle;
+            $tag .= sprintf( "<script%s src='%s' id='%s-js' async></script>\n", $this->type_attr, $src, esc_attr( $handle ) );
+            $tag .= $after_handle;
+
+            echo $tag;
+
+            return true;
+        }
+    }
+}
+
+class AFFL_WC_Order_Tracker
+{
+    public $affl_script;
+
+    public function __construct()
+    {
+        $this->affl_script = new AFFL_Script;
+    }
+
+    public function init()
+    {
+        $this->affl_script->addToQueue('affili-wc-tracker-script', 'https://analytics.affili.ir/scripts/affili-v2.js');
+
+        $this->affl_script->addInline('affili-wc-tracker-script', 'window.affiliData = window.affiliData || [];function affili(){affiliData.push(arguments);}');
+        $this->affl_script->addInline('affili-wc-tracker-script', 'affili(\'create\');');
+
+        add_action('woocommerce_thankyou', [$this, 'track']);
+    }
+
+    public function exec()
+    {
+        return $this->affl_script->printScripts();
+    }
+
+    public function track($order_id)
     {
         $order_id = apply_filters('woocommerce_thankyou_order_id', absint($order_id));
 
@@ -476,18 +550,17 @@ class AFFL_Script
         ];
         $options = count($options) ? json_encode($options) : json_encode($options, JSON_FORCE_OBJECT);
 
-        $script = "affili('conversion', '{$order_id}', '{$amount}', {$options})";
-
-        wp_add_inline_script("affili-wc-tracker-script", $script);
+        $script = "affili('conversion', '{$order_id}', '{$amount}', {$options});";
+        $this->affl_script->addInline('affili-wc-tracker-script', $script);
     }
 }
 
 if (in_array( 'woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     if (!is_admin()) {
-        $affl = new AFFL_Script;
-        $affl->loadScript();
 
-        add_action('woocommerce_thankyou', [$affl, 'trackOrders']);
+        $wc_order_tracker = new AFFL_WC_Order_Tracker;
+        $wc_order_tracker->init();
+        add_action('wp_footer', [$wc_order_tracker, 'exec']);
     }
 
     $wc_product_extractor = new AFFL_WC_Products_Extractor;
