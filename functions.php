@@ -7,7 +7,7 @@
  * Plugin Name:       شبکه همکاری در فروش افیلی
  * Plugin URI:        https://github.com/affili-ir/wordpress
  * Description:       ردیابی خریدها و لیدهای انجام شده توسط بازاریابان افیلی
- * Version:           3.0.0
+ * Version:           4.0.0
  * Author:            Affili IR
  * Author URI:        https://affili.ir
  * License:           GPLv2 or later
